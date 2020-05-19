@@ -1,0 +1,259 @@
+<script src="js/web3.min.js"></script>
+<script src="js/ethjs.min.js"></script>
+<script src="js/jquery.min.js"></script>
+<link rel="stylesheet" href="css/bootstrap.min.css" />
+    
+
+<head>
+	<title>ModestWritings DApp</title>
+	<h1 class="text-center"> ModestWritings.com DApp </h1>
+	<hr>
+</head>
+
+<body>
+	<div id="theDApp" class="center">
+	<center>
+		<h4 id="accountBalanceHeading"> Your balance is: </h4>
+		<h4 style="color: lightgreen" id="accountBalance"></h4>
+		<hr>
+		<form id="transferForm">
+			<h4> Transfer Tokens </h4>
+			<input class="form-control col-md-2" type="text" id="getReceiver" placeholder="Enter receiver address" required/>
+			<input style="margin-top: 5px" class="form-control col-md-2" type="text" id="getAmount" placeholder="Enter amount" required/>
+			<button style="margin-top: 10px" type="submit" class="btn btn-info" id="getBalance">Transfer</button>
+			<br> <br>
+			<h5 id="transferHeading"> Transfer Status </h5>
+			<p id="transferStatus"> </p>
+		</form>
+	</center>
+	</div>
+
+	<!-- Show the following if MetaMask is not installed -->
+	<p id="noMetaMask" class="text-center"></p>
+</body>
+  
+<script>
+	$(document).ready(function() {
+		$("#accountBalanceHeading").hide();
+		$("#transferHeading").hide();
+		$("#transferForm").hide();
+	});
+	  window.addEventListener('load', async () => {
+	  	if(typeof web3 == undefined) {
+		//$("noMetaMask").show();
+		}
+		if (window.ethereum) {
+			window.web3 = new Web3(ethereum);
+			try {
+				// Request account access
+				await ethereum.enable();
+				// Acccounts now exposed
+				startApp(web3);
+			} catch (error) {
+				console.log(error);
+			}
+		}
+		// Legacy dapp browsers...
+		else if (window.web3) {
+			window.web3 = new Web3(web3.currentProvider);
+			// Acccounts always exposed
+			startApp(web3);
+		}
+		else {
+			//alert('Non-Ethereum browser detected. You should consider trying MetaMask!');
+			$("#noMetaMask").html("Oops. It seems like you don't have <a href=\"https://metamask.io\">MetaMask</a> installed ");
+			$("#theDApp").hide();
+		}
+	});
+	const abi = [
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_totalSupply",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "tokens",
+				"type": "uint256"
+			}
+		],
+		"name": "Transfer",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "balanceOf",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "balances",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "decimals",
+		"outputs": [
+			{
+				"internalType": "uint8",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getSupply",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "name",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "symbol",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalSupply",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "receiver",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokens",
+				"type": "uint256"
+			}
+		],
+		"name": "transfer",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+];
+	const contract_address = '0xce48a2c7362d25c7d7765d19bbc353c93b603109';
+	var eth = null;
+	var token;
+	
+	function startApp(web3) {
+		eth = new Eth(web3.currentProvider);
+		token = eth.contract(abi).at(contract_address);
+
+		// show balance
+		showBalance();
+		
+	}
+	
+	$("#transferForm").on('submit', function(event) {
+		event.preventDefault();
+		var amount = $("#getAmount").val();
+		var receiver = $("#getReceiver").val();
+		
+		token.transfer.sendTransaction
+		
+	});
+	
+	
+	function showBalance() {
+		token.balanceOf(web3.eth.coinbase).then(function(res) {
+		$("#accountBalanceHeading").show();
+		var result = res[0]["words"][0];
+		result = result.toString().slice(0, -2);
+		$("#accountBalance").html(result).append(" TKZ");
+		});
+	}
+	
+</script>
