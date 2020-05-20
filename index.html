@@ -2,41 +2,86 @@
 <script src="js/ethjs.min.js"></script>
 <script src="js/jquery.min.js"></script>
 <link rel="stylesheet" href="css/bootstrap.min.css" />
-    
 
 <head>
-	<title>ModestWritings DApp</title>
-	<h1 class="text-center"> ModestWritings.com DApp </h1>
+	<title>MW DApp</title>
+	<h1 class="text-center"> MW DApp </h1>
 	<hr>
 </head>
 
 <body>
-	<div id="theDApp" class="center">
+<div class="col-md-12 container-fluid row d-flex">
+	<!-- LEFT COLUMN -->
+	<div class="col-md-2" style="border-right: 1px solid #ccc">
+		<h4 class="text-center"> Info </h4>
+		<ul>
+		<li> Out of ethers? <br> Click <a href="https://faucet.rinkeby.io/">here</a> to get few </li>
+		</ul>
+		
+		<div id="tProgress" class="alert alert-info" role="alert">
+			  Transaction is being processed. Please wait
+			</div>
+			<div id="tSuccess" class="alert alert-success" role="alert">
+			  Transaction completed successfully
+			</div>
+			<div id="tFail" class="alert alert-danger" role="alert">
+			  Transaction failed. Please try again
+			</div>
+	</div>
+	
+	<!-- CENTER COLUMN -->
+	<div class="center col-md-8">
 	<center>
-		<h4 id="accountBalanceHeading"> Your balance is: </h4>
-		<h4 style="color: lightgreen" id="accountBalance"></h4>
-		<hr>
 		<form id="transferForm">
 			<h4> Transfer Tokens </h4>
-			<input class="form-control col-md-2" type="text" id="getReceiver" placeholder="Enter receiver address" required/>
-			<input style="margin-top: 5px" class="form-control col-md-2" type="text" id="getAmount" placeholder="Enter amount" required/>
-			<button style="margin-top: 10px" type="submit" class="btn btn-info" id="getBalance">Transfer</button>
+			<input class="form-control col-md-4" type="text" id="getReceiver" placeholder="Enter receiver address" required/>
+			<input style="margin-top: 5px" class="form-control col-md-4" type="text" id="getAmount" placeholder="Enter amount" required/>
+			<button style="margin-top: 10px" type="submit" class="btn btn-info" id="transferButton">Transfer</button>
 			<br> <br>
-			<h5 id="transferHeading"> Transfer Status </h5>
-			<p id="transferStatus"> </p>
 		</form>
+		<!-- Show the following if MetaMask is not installed -->
+		<p id="noMetaMask" class="text-center"></p>
 	</center>
 	</div>
-
-	<!-- Show the following if MetaMask is not installed -->
-	<p id="noMetaMask" class="text-center"></p>
+	
+	<!-- RIGHT COLUMN -->
+	<div style="border-left: 1px solid #ccc" class="text-center col-md-2">
+	<h4> Account Info </h4>
+		<p style="display: inline" id="accountBalanceHeading"> Balance: </p>
+		<b><p style="display: inline; color: lightgreen" id="accountBalance"></p></b>
+		<br>
+		<p style="display: inline"> Name: </p>
+		<b><p style="display: inline; color: lightgreen" id="nameID"></p></b>
+		<br>
+		<p style="display: inline"> CNIC: </p>
+		<b><p style="display: inline; color: lightgreen" id="cnicID"></p></b>
+		<br>
+		<a href="#" id="editButton">(Edit)</a>
+		<a href="#" id="hideButton">(Hide)</a>
+		
+		<!-- Edit Info -->
+		<div id="editInfo">
+		<br>
+		<h5> Edit Account Info </h5>
+		<form>
+		 <input id="getName" placeholder="Enter name" class="form-control" required/>
+		 <input style="margin-top: 5px" id="getCNIC" placeholder="Enter CNIC" class="form-control" required/>
+		 <button type="submit" style="margin-top: 5px" id="sendInfoButton" class="btn btn-info">Submit</button>
+		</form>
+		
+	</div>
+</div>
 </body>
   
 <script>
 	$(document).ready(function() {
 		$("#accountBalanceHeading").hide();
 		$("#transferHeading").hide();
-		$("#transferForm").hide();
+		$("#tSuccess").hide();
+		$("#tProgress").hide();
+		$("#tFail").hide();
+		$("#editInfo").hide();
+		$("#hideButton").hide();
 	});
 	  window.addEventListener('load', async () => {
 	  	if(typeof web3 == undefined) {
@@ -45,35 +90,85 @@
 		if (window.ethereum) {
 			window.web3 = new Web3(ethereum);
 			try {
-				// Request account access
 				await ethereum.enable();
-				// Acccounts now exposed
 				startApp(web3);
 			} catch (error) {
 				console.log(error);
 			}
 		}
-		// Legacy dapp browsers...
 		else if (window.web3) {
 			window.web3 = new Web3(web3.currentProvider);
-			// Acccounts always exposed
 			startApp(web3);
 		}
 		else {
-			//alert('Non-Ethereum browser detected. You should consider trying MetaMask!');
-			$("#noMetaMask").html("Oops. It seems like you don't have <a href=\"https://metamask.io\">MetaMask</a> installed ");
+			$("#noMetaMask").html("Oops. It seems like you don't have <a href=\"https://metamask.io\">MetaMask</a> installed. Please make sure it is to be able to use this DApp ");
 			$("#theDApp").hide();
 		}
 	});
 	const abi = [
 	{
+		"constant": false,
 		"inputs": [
 			{
-				"internalType": "uint256",
+				"name": "newSupply",
+				"type": "uint256"
+			}
+		],
+		"name": "addToSupply",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_name",
+				"type": "string"
+			},
+			{
+				"name": "_cnic",
+				"type": "string"
+			}
+		],
+		"name": "setOwnerInfo",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "receiver",
+				"type": "address"
+			},
+			{
+				"name": "tokens",
+				"type": "uint256"
+			}
+		],
+		"name": "transfer",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"name": "_totalSupply",
 				"type": "uint256"
 			}
 		],
+		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "constructor"
 	},
@@ -82,19 +177,16 @@
 		"inputs": [
 			{
 				"indexed": true,
-				"internalType": "address",
 				"name": "from",
 				"type": "address"
 			},
 			{
 				"indexed": true,
-				"internalType": "address",
 				"name": "to",
 				"type": "address"
 			},
 			{
 				"indexed": false,
-				"internalType": "uint256",
 				"name": "tokens",
 				"type": "uint256"
 			}
@@ -103,9 +195,9 @@
 		"type": "event"
 	},
 	{
+		"constant": true,
 		"inputs": [
 			{
-				"internalType": "address",
 				"name": "owner",
 				"type": "address"
 			}
@@ -113,18 +205,18 @@
 		"name": "balanceOf",
 		"outputs": [
 			{
-				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
 			}
 		],
+		"payable": false,
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
+		"constant": true,
 		"inputs": [
 			{
-				"internalType": "address",
 				"name": "",
 				"type": "address"
 			}
@@ -132,128 +224,217 @@
 		"name": "balances",
 		"outputs": [
 			{
-				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
 			}
 		],
+		"payable": false,
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
+		"constant": true,
 		"inputs": [],
 		"name": "decimals",
 		"outputs": [
 			{
-				"internalType": "uint8",
 				"name": "",
 				"type": "uint8"
 			}
 		],
+		"payable": false,
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "_owner",
+				"type": "address"
+			}
+		],
+		"name": "getOwnerInfo",
+		"outputs": [
+			{
+				"name": "",
+				"type": "string"
+			},
+			{
+				"name": "",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
 		"inputs": [],
 		"name": "getSupply",
 		"outputs": [
 			{
-				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
 			}
 		],
+		"payable": false,
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
+		"constant": true,
 		"inputs": [],
 		"name": "name",
 		"outputs": [
 			{
-				"internalType": "string",
 				"name": "",
 				"type": "string"
 			}
 		],
+		"payable": false,
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
+		"constant": true,
 		"inputs": [],
 		"name": "symbol",
 		"outputs": [
 			{
-				"internalType": "string",
 				"name": "",
 				"type": "string"
 			}
 		],
+		"payable": false,
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
+		"constant": true,
 		"inputs": [],
 		"name": "totalSupply",
 		"outputs": [
 			{
-				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
 			}
 		],
+		"payable": false,
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "receiver",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "tokens",
-				"type": "uint256"
-			}
-		],
-		"name": "transfer",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	}
 ];
-	const contract_address = '0xce48a2c7362d25c7d7765d19bbc353c93b603109';
+	const contract_address = '0xf55aaF600140B8fF97B94c1EC87462B06DdC3D83';
 	var eth = null;
 	var token;
+	var currentAccount;
 	
 	function startApp(web3) {
 		eth = new Eth(web3.currentProvider);
 		token = eth.contract(abi).at(contract_address);
 
 		// show balance
-		showBalance();
-		
+		getAccounts(function(result) {
+			showBalance(result[0]);
+			currentAccount = result[0];
+		});
+		getOwnerInfo();
 	}
 	
-	$("#transferForm").on('submit', function(event) {
+	function getOwnerInfo() {
+		token.getOwnerInfo(web3.eth.coinbase).then(function(res) {
+			$("#nameID").html(res[0]);
+			$("#cnicID").html(res[1]);
+		});
+	}
+	
+	var transferButton = document.getElementById("transferButton");
+	transferButton.addEventListener('click', function(event) {
 		event.preventDefault();
 		var amount = $("#getAmount").val();
 		var receiver = $("#getReceiver").val();
-		
-		token.transfer.sendTransaction
-		
+		transact(receiver, amount);
+	});
+	
+	var editInfoLink = document.getElementById("sendInfoButton");
+	editInfoLink.addEventListener('click', function(event) {
+		event.preventDefault();
+		var sendName = $("#getName").val().toString();
+		var sendCNIC = $("#getCNIC").val().toString();
+		token.setOwnerInfo(sendName, sendCNIC, { from: web3.eth.coinbase })
+			.then(function(txHash) {
+			waitForTxToBeMined(txHash);
+			
+				}).catch(function(err) { console.log(err) });
 	});
 	
 	
-	function showBalance() {
-		token.balanceOf(web3.eth.coinbase).then(function(res) {
+	
+	var editFormButton = document.getElementById("editButton");
+	editFormButton.addEventListener('click', function(event) {
+		event.preventDefault();
+		$("#editInfo").show();
+		$("#editButton").hide();
+		$("#hideButton").show();
+	});
+	
+	var hideFormButton = document.getElementById("hideButton");
+	hideFormButton.addEventListener('click', function(event) {
+		event.preventDefault();
+		$("#editInfo").hide();
+		$("#hideButton").hide();
+		$("#editButton").show();
+	});
+	
+	
+	function transact(receiver, amount) {
+		token.transfer(receiver, amount, { from: currentAccount })
+			.then(function(txHash) {
+			waitForTxToBeMined(txHash);
+				}).catch(function(err) { console.log(err) });
+	}
+	
+	async function waitForTxToBeMined (txHash) {
+            let txReceipt;
+            while (!txReceipt) {
+                try {
+                    txReceipt = await eth.getTransactionReceipt(txHash);
+					$("#tProgress").fadeIn(1000);
+                } catch (err) {
+                    $("#tFail").fadeIn(1000);
+                    return console.log(err);
+                }
+            }
+            $("#tProgress").fadeOut(200);
+			$("#tFail").fadeOut(200);
+			$("#tSuccess").html("Transaction successfully completed. <a href=\"https://rinkeby.etherscan.io/tx/" + txHash + "\">View on Etherscan</a>");
+			$("#tSuccess").fadeIn(2000);
+			$("#tSuccess").fadeOut(10000);
+			getOwnerInfo();
+			$("#editInfo").hide();
+			showBalance(currentAccount);
+        }
+	
+	// get and show balance
+	function showBalance(address) {
+		token.balanceOf(address).then(function(res) {
 		$("#accountBalanceHeading").show();
 		var result = res[0]["words"][0];
-		result = result.toString().slice(0, -2);
-		$("#accountBalance").html(result).append(" TKZ");
+		$("#accountBalance").html(result).append(" MWT");
 		});
 	}
+	
+	// get address of currently selected account
+	function getAccounts(callback) {
+    web3.eth.getAccounts((error,result) => {
+        if (error) {
+            console.log(error);
+        } else {
+            callback(result);
+        }
+    });
+}
 	
 </script>
