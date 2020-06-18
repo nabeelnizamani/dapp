@@ -20,33 +20,51 @@
 		
 		<div id="tProgress" class="alert alert-info" role="alert">
 			  Transaction is being processed. Please wait
-			</div>
-			<div id="tSuccess" class="alert alert-success" role="alert">
-			  Transaction completed successfully
-			</div>
-			<div id="tFail" class="alert alert-danger" role="alert">
+		</div>
+		<div id="tSuccess" class="alert alert-success" role="alert">
+			  Transaction completed successfully. Please wait for a moment for the changes to be applied. 
+		</div>
+		<div id="tFail" class="alert alert-danger" role="alert">
 			  Transaction failed. Please try again
-			</div>
+		</div>
 	</div>
 	
 	<!-- CENTER COLUMN -->
 	<div class="center col-md-8">
-	<center>
+		<center>
 		<form id="transferForm">
 			<h4> Transfer Tokens </h4>
 			<input class="form-control col-md-4" type="text" id="getReceiver" placeholder="Enter receiver address" required/>
 			<input style="margin-top: 5px" class="form-control col-md-4" type="text" id="getAmount" placeholder="Enter amount" required/>
 			<button style="margin-top: 10px" type="submit" class="btn btn-info" id="transferButton">Transfer</button>
-			<br> <br>
 		</form>
+		<br>
+		<form id="allowDelegateForm">
+			<h4> Allow Delegate Transfer </h4>
+			<input class="form-control col-md-4" type="text" id="delegateAddress" placeholder="Enter delegate address" required/>
+			<input style="margin-top: 5px" class="form-control col-md-4" type="text" id="delegateAmount" placeholder="Enter amount" required/>
+			<button style="margin-top: 10px" type="submit" class="btn btn-info" id="allowDelegateButton">Allow</button>
+		</form>
+		<!-- 
+		<br> 
+		<form id="viewDelegateApprovalsForm">
+			<h4> View Granted Approvals </h4>
+			<input class="form-control col-md-4" type="text" id="viewDelegateApprovalAddress" placeholder="Enter delegate address" required/>
+			<button style="margin-top: 10px" type="submit" class="btn btn-info" id="viewDelegateApprovalsButton">View</button>
+		</form>
+		<p id="showAmountApprovedToDelegate"></p> 
+		<br>
+		-->
+		<i> More features to be brought up soon </i>
 		<!-- Show the following if MetaMask is not installed -->
 		<p id="noMetaMask" class="text-center"></p>
-	</center>
+		</center>
 	</div>
 	
 	<!-- RIGHT COLUMN -->
 	<div style="border-left: 1px solid #ccc" class="text-center col-md-2">
-	<h4> Account Info </h4>
+	<a href="logout.php">(Logout)</a>
+		<h4> Account Info </h4>
 		<p style="display: inline" id="accountBalanceHeading"> Balance: </p>
 		<b><p style="display: inline; color: lightgreen" id="accountBalance"></p></b>
 		<br>
@@ -61,13 +79,26 @@
 		
 		<!-- Edit Info -->
 		<div id="editInfo">
-		<br>
-		<h5> Edit Account Info </h5>
-		<form>
-		 <input id="getName" placeholder="Enter name" class="form-control" required/>
-		 <input style="margin-top: 5px" id="getCNIC" placeholder="Enter CNIC" class="form-control" required/>
-		 <button type="submit" style="margin-top: 5px" id="sendInfoButton" class="btn btn-info">Submit</button>
-		</form>
+			<br>
+			<h5> Edit Account Info </h5>
+			<form>
+			 <input id="getName" placeholder="Enter name" class="form-control" required/>
+			 <input style="margin-top: 5px" id="getCNIC" placeholder="Enter CNIC" class="form-control" required/>
+			 <button type="submit" style="margin-top: 5px" id="sendInfoButton" class="btn btn-info">Submit</button>
+			</form>
+		</div>
+
+		<!-- Contract Owner -->
+		<div id="ownerSection">
+			<b><p> Contract Owner </p></b>
+			<a href="#" id="editOwnershipButton">(Transfer Ownership)</a>
+			<a href="#" id="hideOwnershipButton">(Hide)</a>
+			<form id="ChangeOwnershipForm">
+				<h5> Transfer Ownership </h5>
+				<input id="newOwner" class="form-control" placeholder="New Owner Address" required/>
+				<button class="btn btn-info" type="submit" id="ChangeOwnershipButton" style="margin-top: 5px">Submit</button>
+			</form>
+		</div>
 		
 	</div>
 </div>
@@ -82,6 +113,7 @@
 		$("#tFail").hide();
 		$("#editInfo").hide();
 		$("#hideButton").hide();
+		$("#ownerSection").hide();
 	});
 	  window.addEventListener('load', async () => {
 	  	if(typeof web3 == undefined) {
@@ -105,228 +137,8 @@
 			$("#theDApp").hide();
 		}
 	});
-	const abi = [
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "newSupply",
-				"type": "uint256"
-			}
-		],
-		"name": "addToSupply",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "_name",
-				"type": "string"
-			},
-			{
-				"name": "_cnic",
-				"type": "string"
-			}
-		],
-		"name": "setOwnerInfo",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "receiver",
-				"type": "address"
-			},
-			{
-				"name": "tokens",
-				"type": "uint256"
-			}
-		],
-		"name": "transfer",
-		"outputs": [
-			{
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"name": "_totalSupply",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"name": "from",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"name": "tokens",
-				"type": "uint256"
-			}
-		],
-		"name": "Transfer",
-		"type": "event"
-	},
-	{
-		"constant": true,
-		"inputs": [
-			{
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"name": "balanceOf",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [
-			{
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "balances",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "decimals",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint8"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [
-			{
-				"name": "_owner",
-				"type": "address"
-			}
-		],
-		"name": "getOwnerInfo",
-		"outputs": [
-			{
-				"name": "",
-				"type": "string"
-			},
-			{
-				"name": "",
-				"type": "string"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "getSupply",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "name",
-		"outputs": [
-			{
-				"name": "",
-				"type": "string"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "symbol",
-		"outputs": [
-			{
-				"name": "",
-				"type": "string"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "totalSupply",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	}
-];
-	const contract_address = '0xf55aaF600140B8fF97B94c1EC87462B06DdC3D83';
+	const abi = [	{		"constant": false,		"inputs": [			{				"name": "newSupply",				"type": "uint256"			}		],		"name": "addToSupply",		"outputs": [],		"payable": false,		"stateMutability": "nonpayable",		"type": "function"	},	{		"constant": false,		"inputs": [			{				"name": "delegate",				"type": "address"			},			{				"name": "tokens",				"type": "uint256"			}		],		"name": "approve",		"outputs": [			{				"name": "",				"type": "bool"			}		],		"payable": false,		"stateMutability": "nonpayable",		"type": "function"	},	{		"constant": false,		"inputs": [			{				"name": "_name",				"type": "string"			},			{				"name": "_cnic",				"type": "string"			}		],		"name": "setOwnerInfo",		"outputs": [],		"payable": false,		"stateMutability": "nonpayable",		"type": "function"	},	{		"constant": false,		"inputs": [			{				"name": "receiver",				"type": "address"			},			{				"name": "tokens",				"type": "uint256"			}		],		"name": "transfer",		"outputs": [			{				"name": "",				"type": "bool"			}		],		"payable": false,		"stateMutability": "nonpayable",		"type": "function"	},	{		"constant": false,		"inputs": [			{				"name": "owner",				"type": "address"			},			{				"name": "buyer",				"type": "address"			},			{				"name": "tokens",				"type": "uint256"			}		],		"name": "transferFrom",		"outputs": [			{				"name": "",				"type": "bool"			}		],		"payable": false,		"stateMutability": "nonpayable",		"type": "function"	},	{		"constant": false,		"inputs": [			{				"name": "newOwner",				"type": "address"			}		],		"name": "transferOwnership",		"outputs": [],		"payable": false,		"stateMutability": "nonpayable",		"type": "function"	},	{		"inputs": [			{				"name": "_totalSupply",				"type": "uint256"			}		],		"payable": false,		"stateMutability": "nonpayable",		"type": "constructor"	},	{		"anonymous": false,		"inputs": [			{				"indexed": true,				"name": "from",				"type": "address"			},			{				"indexed": true,				"name": "to",				"type": "address"			},			{				"indexed": false,				"name": "tokens",				"type": "uint256"			}		],		"name": "Transfer",		"type": "event"	},	{		"anonymous": false,		"inputs": [			{				"indexed": true,				"name": "owner",				"type": "address"			},			{				"indexed": true,				"name": "receiver",				"type": "address"			},			{				"indexed": false,				"name": "tokens",				"type": "uint256"			}		],		"name": "Approval",		"type": "event"	},	{		"constant": true,		"inputs": [			{				"name": "owner",				"type": "address"			},			{				"name": "delegate",				"type": "address"			}		],		"name": "allowance",		"outputs": [			{				"name": "",				"type": "uint256"			}		],		"payable": false,		"stateMutability": "view",		"type": "function"	},	{		"constant": true,		"inputs": [			{				"name": "owner",				"type": "address"			}		],		"name": "balanceOf",		"outputs": [			{				"name": "",				"type": "uint256"			}		],		"payable": false,		"stateMutability": "view",		"type": "function"	},	{		"constant": true,		"inputs": [			{				"name": "_owner",				"type": "address"			}		],		"name": "checkIfContractOwner",		"outputs": [			{				"name": "",				"type": "bool"			}		],		"payable": false,		"stateMutability": "view",		"type": "function"	},	{		"constant": true,		"inputs": [],		"name": "decimals",		"outputs": [			{				"name": "",				"type": "uint8"			}		],		"payable": false,		"stateMutability": "view",		"type": "function"	},	{		"constant": true,		"inputs": [			{				"name": "_owner",				"type": "address"			}		],		"name": "getOwnerInfo",		"outputs": [			{				"name": "",				"type": "string"			},			{				"name": "",				"type": "string"			}		],		"payable": false,		"stateMutability": "view",		"type": "function"	},	{		"constant": true,		"inputs": [],		"name": "getSupply",		"outputs": [			{				"name": "",				"type": "uint256"			}		],		"payable": false,		"stateMutability": "view",		"type": "function"	},	{		"constant": true,		"inputs": [],		"name": "name",		"outputs": [			{				"name": "",				"type": "string"			}		],		"payable": false,		"stateMutability": "view",		"type": "function"	},	{		"constant": true,		"inputs": [],		"name": "symbol",		"outputs": [			{				"name": "",				"type": "string"			}		],		"payable": false,		"stateMutability": "view",		"type": "function"	},	{		"constant": true,		"inputs": [],		"name": "totalSupply",		"outputs": [			{				"name": "",				"type": "uint256"			}		],		"payable": false,		"stateMutability": "view",		"type": "function"	}];
+	const contract_address = '0xE53ABE0ab018fAcF5d410719b54dc919B3f2af4C';
 	var eth = null;
 	var token;
 	var currentAccount;
@@ -341,22 +153,68 @@
 			currentAccount = result[0];
 		});
 		getOwnerInfo();
+		if(checkIfOwner()) {
+			
+		}
+		else {
+			
+		}
 	}
 	
+	async function checkIfOwner() {
+		var isIt;
+                try {
+                     let checkForThis = token.checkIfContractOwner(web3.eth.coinbase).then(function(res) {
+						isIt = res[0];
+					});
+					let isThisOwner = await checkForThis;
+					console.log(isIt);
+					if (isIt) {
+						$("#ownerSection").show();
+						$("#ChangeOwnershipForm").hide();
+						$("#hideOwnershipButton").hide();
+					} else {
+						$("#contractOwnerSection").hide();
+						$("#ChangeOwnershipForm").hide();
+						$("#hideOwnershipButton").hide();
+					}
+					return isIt;
+                } catch (err) {
+                    return console.log(err);
+                }
+	}
+	
+	var changeOwnership = document.getElementById("ChangeOwnershipButton");
+	changeOwnership.addEventListener('click', function(event) {
+		event.preventDefault();
+		var newOwner = $("#newOwner").val();
+		token.transferOwnership(newOwner, { from: currentAccount })
+			.then(function(txHash) {
+				waitForTxToBeMined(txHash);
+			}).catch(function(err) { console.log(err) });	
+	});
+	
+	var editOwnershipButton = document.getElementById("editOwnershipButton");
+	editOwnershipButton.addEventListener('click', function(event) {
+		$("#ChangeOwnershipForm").show();
+		$("#hideOwnershipButton").show();
+		$("#editOwnershipButton").hide();
+	});
+	
+	var hideOwnershipButton = document.getElementById("hideOwnershipButton");
+	hideOwnershipButton.addEventListener('click', function(event) {
+		$("#hideOwnershipButton").hide();
+		$("#ChangeOwnershipForm").hide();
+		$("#editOwnershipButton").show();
+	});
+	
+	// Get and show account owner info (right column)
 	function getOwnerInfo() {
 		token.getOwnerInfo(web3.eth.coinbase).then(function(res) {
 			$("#nameID").html(res[0]);
 			$("#cnicID").html(res[1]);
 		});
 	}
-	
-	var transferButton = document.getElementById("transferButton");
-	transferButton.addEventListener('click', function(event) {
-		event.preventDefault();
-		var amount = $("#getAmount").val();
-		var receiver = $("#getReceiver").val();
-		transact(receiver, amount);
-	});
 	
 	var editInfoLink = document.getElementById("sendInfoButton");
 	editInfoLink.addEventListener('click', function(event) {
@@ -365,9 +223,8 @@
 		var sendCNIC = $("#getCNIC").val().toString();
 		token.setOwnerInfo(sendName, sendCNIC, { from: web3.eth.coinbase })
 			.then(function(txHash) {
-			waitForTxToBeMined(txHash);
-			
-				}).catch(function(err) { console.log(err) });
+			waitForTxToBeMined(txHash);		
+		}).catch(function(err) { console.log(err) });
 	});
 	
 	
@@ -387,15 +244,44 @@
 		$("#hideButton").hide();
 		$("#editButton").show();
 	});
-	
-	
-	function transact(receiver, amount) {
+
+	// Transfer tokens
+	var transferButton = document.getElementById("transferButton");
+	transferButton.addEventListener('click', function(event) {
+		event.preventDefault();
+		var amount = $("#getAmount").val();
+		var receiver = $("#getReceiver").val();
 		token.transfer(receiver, amount, { from: currentAccount })
 			.then(function(txHash) {
-			waitForTxToBeMined(txHash);
-				}).catch(function(err) { console.log(err) });
-	}
+				waitForTxToBeMined(txHash);
+			}).catch(function(err) { console.log(err) });
+	});	
 	
+	// Allow delegate transfer
+	var allowDelegateButton = document.getElementById("allowDelegateButton");
+	allowDelegateButton.addEventListener('click', function(event) {
+		event.preventDefault();
+		var amount = $("#delegateAmount").val();
+		var receiver = $("#delegateAddress").val();
+		token.approve(receiver, amount, { from: currentAccount })
+			.then(function(txHash) {
+				waitForTxToBeMined(txHash);
+			}).catch(function(err) { console.log(err) });
+	});	
+	
+	// View approvals made to a delegate 
+	var viewDelegateApprovalsButton = document.getElementById("viewDelegateApprovalsButton");
+	viewDelegateApprovalsButton.addEventListener('click', function(event) {
+		event.preventDefault();
+		var receiver = $("#viewDelegateApprovalAddress").val();
+		token.allowance(currentAccount, receiver, { from: currentAccount })
+			.then(function(result) {
+				console.log(result[0]);
+			}).catch(function(err) { console.log(err) });
+	});	
+	
+	
+	// Wait for the transaction to be processed - getting the transaction hash mined
 	async function waitForTxToBeMined (txHash) {
             let txReceipt;
             while (!txReceipt) {
@@ -409,7 +295,7 @@
             }
             $("#tProgress").fadeOut(200);
 			$("#tFail").fadeOut(200);
-			$("#tSuccess").html("Transaction successfully completed. <a href=\"https://rinkeby.etherscan.io/tx/" + txHash + "\">View on Etherscan</a>");
+			$("#tSuccess").html("Transaction completed successfully. Please wait for a moment for the changes to be applied.  <a href=\"https://rinkeby.etherscan.io/tx/" + txHash + "\">View on Etherscan</a>");
 			$("#tSuccess").fadeIn(2000);
 			$("#tSuccess").fadeOut(10000);
 			getOwnerInfo();
@@ -420,9 +306,9 @@
 	// get and show balance
 	function showBalance(address) {
 		token.balanceOf(address).then(function(res) {
-		$("#accountBalanceHeading").show();
-		var result = res[0]["words"][0];
-		$("#accountBalance").html(result).append(" MWT");
+			$("#accountBalanceHeading").show();
+			var result = res[0]["words"][0];
+			$("#accountBalance").html(result).append(" MWT");
 		});
 	}
 	
@@ -438,3 +324,16 @@
 }
 	
 </script>
+
+<style>
+	html,body{
+		background-image: url('bgimg.jpg');
+		background-size: cover;
+		background-repeat: repeat;
+		height: 100%;
+	}
+	h1, h2, h3, h4, h5, p, li, ul, i {
+		color: white;
+	}
+	
+</style>
